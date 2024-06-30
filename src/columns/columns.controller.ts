@@ -6,13 +6,14 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  Post,
   Put,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { ACCESS_TOKEN_NAME } from '@/libs/common/constants';
 import { ColumnsService } from './columns.service';
-import { UpdateColumnDto } from './dtos';
+import { CreateColumnDto, UpdateColumnDto } from './dtos';
 
 @Controller('columns')
 @ApiTags('Columns')
@@ -53,6 +54,31 @@ export class ColumnsController {
   async findOne(@Param('id') id: string): Promise<any> {
     try {
       const column = await this.columnService.findOne(id);
+
+      return {
+        isError: false,
+        statusCode: HttpStatus.OK,
+        message: 'Successful',
+        data: column,
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          isError: true,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create new column' })
+  @ApiBearerAuth(ACCESS_TOKEN_NAME)
+  async create(@Body() createEmployeeDto: CreateColumnDto) {
+    try {
+      const column = await this.columnService.create(createEmployeeDto);
 
       return {
         isError: false,

@@ -7,7 +7,7 @@ export class Comment {
   @PrimaryGeneratedColumn()
   id: string;
 
-  @Column('longtext', { nullable: true })
+  @Column({ nullable: true })
   content: string;
 
   @ManyToOne(() => User)

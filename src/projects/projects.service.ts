@@ -33,8 +33,8 @@ export class ProjectsService {
   }
 
   async create(createDataDto: CreateProjectDto): Promise<Project> {
-    const project = Object.assign(new Project(), createDataDto);
-    return await this.projectRepository.save(project);
+    const newProject = this.projectRepository.create(createDataDto);
+    return await this.projectRepository.save(newProject);
   }
 
   async update(id: string, updateDataDto: UpdateProjectDto): Promise<Project> {

@@ -1,20 +1,18 @@
 FROM node:20
 
 # Create app directory
-WORKDIR /app
-
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-COPY package*.json ./
+WORKDIR /usr/src/app
 
 # Install app dependencies
+COPY package*.json ./
+
 RUN yarn install
 
 # Bundle app source
 COPY . .
 
-# Creates a "dist" folder with the production build
 RUN yarn build
 
 EXPOSE 8080
 
-CMD ["node", "dist/main"]
+CMD [ "yarn" , "start:prod" ]

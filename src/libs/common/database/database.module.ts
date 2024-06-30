@@ -1,29 +1,21 @@
-import { Logger, Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        host: configService.get('POSTGRES_HOST'),
-        port: parseInt(configService.get('POSTGRES_PORT')),
-        username: configService.get('POSTGRES_USER'),
-        password: configService.get('POSTGRES_PASSWORD'),
-        database: configService.get('POSTGRES_DATABASE'),
+        host: configService.get<string>('PG_HOST'),
+        port: configService.get<number>('PG_PORT'),
+        username: configService.get<string>('PG_USER'),
+        password: configService.get<string>('PG_PASSWORD'),
+        database: configService.get<string>('PG_DB'),
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
         synchronize: true, // Be cautious about using synchronize in production
-        connectionFactory: (connection) => {
-          const logger = new Logger('PostgreSQL');
-
-          connection.driver.afterConnect = () => {
-            logger.log(
-              `⚡️ [PostgreSQL] is connected: ${connection.options.host}/${connection.options.database}`,
-            );
-          };
-          return connection;
-        },
+        autoLoadEntities: true,
       }),
       inject: [ConfigService],
     }),

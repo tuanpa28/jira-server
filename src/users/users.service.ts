@@ -33,8 +33,8 @@ export class UserService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const user = Object.assign(new User(), createUserDto);
-    return await this.userRepository.save(user);
+    const newUser = this.userRepository.create(createUserDto);
+    return await this.userRepository.save(newUser);
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {

@@ -7,12 +7,13 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  Post,
   Put,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CategoriesService } from './categories.service';
-import { UpdateCategoryDto } from './dtos';
+import { CreateCategoryDto, UpdateCategoryDto } from './dtos';
 
 @Controller('categories')
 @ApiTags('Categories')
@@ -53,6 +54,31 @@ export class CategoriesController {
   async findOne(@Param('id') id: string): Promise<any> {
     try {
       const category = await this.categoryService.findOne(id);
+
+      return {
+        isError: false,
+        statusCode: HttpStatus.OK,
+        message: 'Successful',
+        data: category,
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          isError: true,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create new category' })
+  @ApiBearerAuth(ACCESS_TOKEN_NAME)
+  async create(@Body() createEmployeeDto: CreateCategoryDto) {
+    try {
+      const category = await this.categoryService.create(createEmployeeDto);
 
       return {
         isError: false,

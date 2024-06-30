@@ -18,10 +18,10 @@ export class Task {
   @PrimaryGeneratedColumn()
   id: string;
 
-  @ColumnORM('longtext', { nullable: true })
+  @ColumnORM({ nullable: true })
   title: string;
 
-  @ColumnORM('longtext', { nullable: true })
+  @ColumnORM({ nullable: true })
   description?: string;
 
   @ManyToOne(() => Project, (project) => project.tasks)
