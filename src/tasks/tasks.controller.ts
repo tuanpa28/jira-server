@@ -6,12 +6,13 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  Post,
   Put,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { ACCESS_TOKEN_NAME } from '@/libs/common/constants';
-import { UpdateTaskDto } from './dtos';
+import { CreateTaskDto, UpdateTaskDto } from './dtos';
 import { TasksService } from './tasks.service';
 
 @Controller('tasks')
@@ -53,6 +54,31 @@ export class TasksController {
   async findOne(@Param('id') id: string): Promise<any> {
     try {
       const task = await this.taskService.findOne(id);
+
+      return {
+        isError: false,
+        statusCode: HttpStatus.OK,
+        message: 'Successful',
+        data: task,
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          isError: true,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create new task' })
+  @ApiBearerAuth(ACCESS_TOKEN_NAME)
+  async create(@Body() createEmployeeDto: CreateTaskDto) {
+    try {
+      const task = await this.taskService.create(createEmployeeDto);
 
       return {
         isError: false,

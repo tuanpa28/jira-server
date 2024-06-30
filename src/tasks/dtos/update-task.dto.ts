@@ -1,7 +1,7 @@
+import { UserDto } from '@/users/dtos';
 import { PartialType } from '@nestjs/mapped-types';
 import { ApiProperty } from '@nestjs/swagger';
 import { CreateTaskDto } from './create-task.dto';
-// import { UserDto } from '@/users/dtos';
 
 export class UpdateTaskDto extends PartialType(CreateTaskDto) {
   @ApiProperty({
@@ -11,13 +11,13 @@ export class UpdateTaskDto extends PartialType(CreateTaskDto) {
   })
   description?: string;
 
-  // @ApiProperty({
-  //   isArray: true,
-  //   type: UserDto,
-  //   description: 'List users assign',
-  //   required: false,
-  // })
-  // usersAssign: UserDto[];
+  @ApiProperty({
+    isArray: true,
+    type: UserDto,
+    description: 'List users assign',
+    required: false,
+  })
+  usersAssign?: UserDto[];
 
   @ApiProperty({
     example: 'TO DO',

@@ -6,13 +6,14 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  Post,
   Put,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { ACCESS_TOKEN_NAME } from '@/libs/common/constants';
 import { CommentsService } from './comments.service';
-import { UpdateCommentDto } from './dtos';
+import { CreateCommentDto, UpdateCommentDto } from './dtos';
 
 @Controller('comments')
 @ApiTags('Comments')
@@ -53,6 +54,31 @@ export class CommentsController {
   async findOne(@Param('id') id: string): Promise<any> {
     try {
       const comment = await this.commentService.findOne(id);
+
+      return {
+        isError: false,
+        statusCode: HttpStatus.OK,
+        message: 'Successful',
+        data: comment,
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          isError: true,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create new comment' })
+  @ApiBearerAuth(ACCESS_TOKEN_NAME)
+  async create(@Body() createEmployeeDto: CreateCommentDto) {
+    try {
+      const comment = await this.commentService.create(createEmployeeDto);
 
       return {
         isError: false,

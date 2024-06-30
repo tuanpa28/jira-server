@@ -21,10 +21,10 @@ export class Project {
   @ColumnORM({ unique: true })
   name: string;
 
-  @ColumnORM('longtext')
+  @ColumnORM()
   url?: string;
 
-  @ColumnORM('longtext')
+  @ColumnORM()
   description?: string;
 
   @ManyToOne(() => Category, (category) => category.projects)

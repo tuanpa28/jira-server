@@ -1,24 +1,34 @@
-version: '3.8'
-services:
-  api:
-    # image: thomas-oliver/nestjs-dockerized
-    build:
-      dockerfile: Dockerfile
-      context: .
-    depends_on:
-      - postgres
-    environment:
-      DATABASE_URL: postgres://user:password@postgres:5432/db
-      NODE_ENV: development
-      PORT: 3000
-    ports:
-      - '8080:3000'
+version: '3.9'
 
-  postgres:
-    image: postgres:10.4
+services:
+  jira-app:
+    container_name: jira-app
+    image: jira-app:1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - '35000:5432'
+      - 8080:8080
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: db
+      - PG_HOST=db 
+      - PG_USER=postgres
+      - PG_PASSWORD=postgres
+      - PG_DB=postgres
+      - PG_PORT=5432  
+      - SECRET_KEY_SESSION=secret_key_session
+      - SECRET_KEY_JWT=secret_key_jwt
+    depends_on:
+      - db
+  db:
+    container_name: db
+    image: postgres:12
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata: {}

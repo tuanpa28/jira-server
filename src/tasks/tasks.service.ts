@@ -42,7 +42,8 @@ export class TasksService {
     if (!task) {
       throw new NotFoundException('Task not found');
     }
-    await this.taskRepository.update({ id }, updateDataDto);
+    const updateTask = Object.assign(new Task(), updateDataDto);
+    await this.taskRepository.update({ id }, updateTask);
     return task;
   }
 

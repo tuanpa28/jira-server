@@ -34,8 +34,8 @@ export class ColumnsService {
   }
 
   async create(createColumnDto: CreateColumnDto): Promise<Column> {
-    const column = Object.assign(new Column(), createColumnDto);
-    return await this.columnRepository.save(column);
+    const newColumn = this.columnRepository.create(createColumnDto);
+    return await this.columnRepository.save(newColumn);
   }
 
   async update(id: string, updateColumnDto: UpdateColumnDto): Promise<Column> {
