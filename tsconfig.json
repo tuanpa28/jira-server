@@ -18,14 +18,10 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@/libs/*": ["src/libs/*"],
-      "@/auth/*": ["src/auth/*"],
-      "@/users/*": ["src/users/*"],
-      "@/categories/*": ["src/categories/*"],
-      "@/comments/*": ["src/comments/*"],
-      "@/projects/*": ["src/projects/*"],
-      "@/tasks/*": ["src/tasks/*"],
-      "@/columns/*": ["src/columns/*"]
+      "~/common/*": ["src/common/*"],
+      "~/config/*": ["src/config/*"],
+      "~/database/*": ["src/database/*"],
+      "~/modules/*": ["src/modules/*"]
     }
   }
 }

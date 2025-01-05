@@ -28,7 +28,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^7.3.1",
     "@nestjs/typeorm": "^10.0.2",
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.6",
@@ -43,7 +43,7 @@
     "@nestjs/cli": "^10.0.0",
     "@nestjs/schematics": "^10.0.0",
     "@nestjs/testing": "^10.0.0",
-    "@types/bcrypt": "^5.0.2",
+    "@types/bcryptjs": "^2",
     "@types/cookie-parser": "^1.4.7",
     "@types/express": "^4.17.17",
     "@types/express-session": "^1.18.0",
@@ -81,5 +81,6 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
-  }
+  },
+  "packageManager": "yarn@1.22.19+sha512.ff4579ab459bb25aa7c0ff75b62acebe576f6084b36aa842971cf250a5d8c6cd3bc9420b22ce63c7f93a0857bc6ef29291db39c3e7a23aab5adfd5a4dd6c5d71"
 }

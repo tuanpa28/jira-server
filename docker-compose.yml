@@ -1,34 +1,31 @@
-version: '3.9'
+version: '3.8'
 
 services:
-  jira-app:
-    container_name: jira-app
-    image: jira-app:1.0.0
+  jira-backend:
+    container_name: jira-backend
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./Dockerfile
     ports:
       - 8080:8080
-    environment:
-      - PG_HOST=db 
-      - PG_USER=postgres
-      - PG_PASSWORD=postgres
-      - PG_DB=postgres
-      - PG_PORT=5432  
-      - SECRET_KEY_SESSION=secret_key_session
-      - SECRET_KEY_JWT=secret_key_jwt
+    env_file:
+      - .env
     depends_on:
-      - db
-  db:
-    container_name: db
-    image: postgres:12
+      - jira-db
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
+
+  jira-db:
+    container_name: jira-db
+    image: postgres:14
     ports:
       - 5432:5432
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
+    env_file:
+      - .env
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data
+
 volumes:
-  pgdata: {}
+  postgres_data: {}

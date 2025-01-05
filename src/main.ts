@@ -1,13 +1,12 @@
-import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
 import * as session from 'express-session';
-import { NestExpressApplication } from '@nestjs/platform-express';
+import helmet from 'helmet';
 
 import { AppModule } from './app.module';
-import { ACCESS_TOKEN_NAME } from '@/libs/common/constants';
 
 async function bootstrap() {
   const port = process.env.API_PORT || 8080;
@@ -27,31 +26,20 @@ async function bootstrap() {
     session({
       secret: process.env.SECRET_KEY_SESSION,
       resave: false,
-      saveUninitialized: true,
+      saveUninitialized: false,
     }),
   );
 
   // Use swagger to generate documentations
   const swaggerDocument = new DocumentBuilder()
     .setTitle('Jira clone Restful API Documentations')
+    .setDescription('This is the documentation for the Jira clone RESTful API.')
     .setVersion('1.0')
-    .addServer('http://localhost:8080')
-    .addBearerAuth(
-      {
-        description: `[just text field] Please enter your access token`,
-        name: 'Authorization',
-        bearerFormat: 'Bearer',
-        scheme: 'Bearer',
-        type: 'http',
-        in: 'Header',
-      },
-      ACCESS_TOKEN_NAME, // This name here is important for matching up with @ApiBearerAuth() in controller!
-    )
     .build();
 
-  const document = SwaggerModule.createDocument(app, swaggerDocument);
+  const documentFactory = SwaggerModule.createDocument(app, swaggerDocument);
 
-  SwaggerModule.setup('/', app, document);
+  SwaggerModule.setup('/api/documentations', app, documentFactory);
 
   await app.listen(port, () => {
     logger.log(
