@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 
-import { AppConfigModule } from '~/config/appConfig';
-import { AuthModule } from '~/modules/auth/auth.module';
-import { CategoriesModule } from '~/modules/categories/categories.module';
-import { ColumnsModule } from '~/modules/columns/columns.module';
-import { CommentsModule } from '~/modules/comments/comments.module';
-import { ProjectsModule } from '~/modules/projects/projects.module';
-import { TasksModule } from '~/modules/tasks/tasks.module';
-import { UserModule } from '~/modules/users/users.module';
-import { DatabaseModule } from './database';
+import { AppConfigModule } from '~/config/app';
+import { DatabaseModule } from '~/config/database';
+import { UserModule } from '~/modules/users';
+import { AuthModule } from '~/modules/auth';
+import { CategoriesModule } from '~/modules/categories';
+import { ColumnsModule } from '~/modules/columns';
+import { CommentsModule } from '~/modules/comments';
+import { ProjectsModule } from '~/modules/projects';
+import { TasksModule } from '~/modules/tasks';
 
 @Module({
   imports: [

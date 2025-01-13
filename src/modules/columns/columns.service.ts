@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { CreateColumnDto, UpdateColumnDto } from './dtos';
-import { Column } from './entities';
-import { CommonQueryOptions } from '~/common/dto';
+import { IQueryOptions } from '~/common/dto';
+import { Column } from '~/entities';
+import { CreateColumnDto, UpdateColumnDto } from './dto';
 
 @Injectable()
 export class ColumnsService {
@@ -17,28 +17,36 @@ export class ColumnsService {
     return await this.columnRepository.findOne({ where: { id } });
   }
 
-  async findOneOptions({
-    field,
-    payload,
-  }: {
-    field: string;
-    payload: any;
-  }): Promise<Column> {
+  async findOneOptions<T>({ field, payload }: { field: string; payload: T }): Promise<Column> {
     const query = {
       [field]: payload,
     };
     return await this.columnRepository.findOne(query);
   }
 
-  async findAll(options: CommonQueryOptions): Promise<Column[]> {
-    const { skip, limit, sort, ...params } = options;
+  async findAll(options: IQueryOptions): Promise<Column[]> {
+    const { skip, limit, sort, order, ...params } = options;
+    const queryBuilder = this.columnRepository.createQueryBuilder('column');
 
-    return await this.columnRepository.find({
-      where: params,
-      skip: skip,
-      take: limit,
-      order: sort,
-    });
+    queryBuilder
+      .leftJoinAndSelect('column.tasks', 'task')
+      .select([
+        'column.id',
+        'column.name',
+        'task.id',
+        'task.title',
+        'task.description',
+        'task.status',
+        'task.originalEstimate',
+        'task.timeTracking',
+        'task.timeRemaining',
+        'task.type',
+        'task.priority',
+      ]);
+
+    queryBuilder.where(params).skip(skip).take(limit).addOrderBy(`column.${sort}`, order);
+
+    return await queryBuilder.getMany();
   }
 
   async create(createColumnDto: CreateColumnDto): Promise<Column> {

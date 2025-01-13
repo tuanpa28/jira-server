@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { CreateUserDto, UpdateUserDto } from './dtos';
-import { User } from './entities';
-import { CommonQueryOptions } from '~/common/dto';
+import { IQueryOptions } from '~/common/dto';
+import { User } from '~/entities';
+import { CreateUserDto, UpdateUserDto } from './dto';
 
 @Injectable()
 export class UserService {
@@ -17,27 +17,22 @@ export class UserService {
     return await this.userRepository.findOne({ where: { id } });
   }
 
-  async findOneOptions({
-    field,
-    payload,
-  }: {
-    field: string;
-    payload: any;
-  }): Promise<User> {
+  async findOneOptions<T>({ field, payload }: { field: string; payload: T }): Promise<User> {
     const query = {
       [field]: payload,
     };
+
     return await this.userRepository.findOne(query);
   }
 
-  async findAll(options: CommonQueryOptions): Promise<User[]> {
-    const { skip, limit, sort, ...params } = options;
+  async findAll(options: IQueryOptions): Promise<User[]> {
+    const { skip, limit, sort, order, ...params } = options;
 
     return await this.userRepository.find({
       where: params,
       skip: skip,
       take: limit,
-      order: sort,
+      order: { [sort]: order },
     });
   }
 

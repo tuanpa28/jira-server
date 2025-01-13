@@ -9,43 +9,41 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { ApiResponseDto, IQueryOptions, QueryDto } from '~/common/dto';
+import { AuthGuard } from '~/common/guards';
+import { Column } from '~/entities';
+import { ACCESS_TOKEN } from '~/shared/constants';
 import { ColumnsService } from './columns.service';
-import { CreateColumnDto, UpdateColumnDto } from './dtos';
-import { ApiResponseDto, CommonQueryOptions, QueryDto } from '~/common/dto';
-import { Column } from './entities';
+import { CreateColumnDto, UpdateColumnDto } from './dto';
 
+@ApiCookieAuth(ACCESS_TOKEN)
 @Controller('columns')
 @ApiTags('Columns')
+@UseGuards(AuthGuard)
 export class ColumnsController {
   constructor(private columnService: ColumnsService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get Column list' })
   async findAll(@Query() query: QueryDto): Promise<ApiResponseDto<Column[]>> {
-    const {
-      page = 1,
-      limit = 10,
-      _sort = 'id',
-      _order = 'asc',
-      ...params
-    } = query;
+    const { page = 1, limit = 10, sortBy = 'id', orderBy = 'asc', ...params } = query;
 
-    const options: CommonQueryOptions = {
+    const options: IQueryOptions = {
       skip: (Number(page) - 1) * Number(limit),
       limit: Number(limit),
-      sort: {
-        [_sort]: _order === 'desc' ? 'DESC' : 'ASC',
-      },
+      sort: sortBy,
+      order: orderBy === 'asc' ? 'ASC' : 'DESC',
       ...params,
     };
 
     try {
       const [columns, count] = await Promise.all([
         this.columnService.findAll(options),
-        this.columnService.count(),
+        this.columnService.count(params),
       ]);
 
       return new ApiResponseDto(
@@ -90,9 +88,7 @@ export class ColumnsController {
 
   @Post()
   @ApiOperation({ summary: 'Create new column' })
-  async create(
-    @Body() createEmployeeDto: CreateColumnDto,
-  ): Promise<ApiResponseDto<Column>> {
+  async create(@Body() createEmployeeDto: CreateColumnDto): Promise<ApiResponseDto<Column>> {
     try {
       const column = await this.columnService.create(createEmployeeDto);
 
@@ -133,11 +129,11 @@ export class ColumnsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete column by id' })
-  async delete(@Param('id') id: number): Promise<ApiResponseDto<unknown>> {
+  async delete(@Param('id') id: number): Promise<ApiResponseDto<null>> {
     try {
-      const column = await this.columnService.remove(id);
+      await this.columnService.remove(id);
 
-      return new ApiResponseDto(false, HttpStatus.OK, 'Successful', column);
+      return new ApiResponseDto(false, HttpStatus.OK, 'Successful', null);
     } catch (error) {
       throw new HttpException(
         {

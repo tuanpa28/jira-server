@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { Category } from './entities';
-import { CreateCategoryDto, UpdateCategoryDto } from './dtos';
-import { CommonQueryOptions } from '~/common/dto';
+import { IQueryOptions } from '~/common/dto';
+import { Category } from '~/entities';
+import { CreateCategoryDto, UpdateCategoryDto } from './dto';
 
 @Injectable()
 export class CategoriesService {
@@ -17,28 +17,31 @@ export class CategoriesService {
     return await this.categoryRepository.findOne({ where: { id } });
   }
 
-  async findOneOptions({
-    field,
-    payload,
-  }: {
-    field: string;
-    payload: unknown;
-  }): Promise<Category> {
+  async findOneOptions<T>({ field, payload }: { field: string; payload: T }): Promise<Category> {
     const query = {
       [field]: payload,
     };
     return await this.categoryRepository.findOne(query);
   }
 
-  async findAll(options: CommonQueryOptions): Promise<Category[]> {
-    const { skip, limit, sort, ...params } = options;
+  async findAll(options: IQueryOptions): Promise<Category[]> {
+    const { skip, limit, sort, order, ...params } = options;
+    const queryBuilder = this.categoryRepository.createQueryBuilder('category');
 
-    return await this.categoryRepository.find({
-      where: params,
-      skip: skip,
-      take: limit,
-      order: sort,
-    });
+    queryBuilder
+      .leftJoinAndSelect('category.projects', 'project')
+      .select([
+        'category.id',
+        'category.name',
+        'project.id',
+        'project.name',
+        'project.url',
+        'project.description',
+      ]);
+
+    queryBuilder.where(params).skip(skip).take(limit).addOrderBy(`category.${sort}`, order);
+
+    return await queryBuilder.getMany();
   }
 
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
@@ -46,10 +49,7 @@ export class CategoriesService {
     return this.categoryRepository.save(newCategory);
   }
 
-  async update(
-    id: number,
-    updateCategoryDto: UpdateCategoryDto,
-  ): Promise<Category> {
+  async update(id: number, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
     await this.categoryRepository.update(id, updateCategoryDto);
     return this.categoryRepository.findOne({ where: { id } });
   }

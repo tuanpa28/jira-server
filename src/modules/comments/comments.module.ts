@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CommentsController } from './comments.controller';
 import { CommentsService } from './comments.service';
-import { Comment } from './entities';
+import { Comment } from '~/entities';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Comment])],

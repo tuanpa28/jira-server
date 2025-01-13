@@ -9,43 +9,41 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { ApiResponseDto, CommonQueryOptions, QueryDto } from '~/common/dto';
+import { ApiResponseDto, IQueryOptions, QueryDto } from '~/common/dto';
+import { AuthGuard } from '~/common/guards';
+import { Category } from '~/entities';
+import { ACCESS_TOKEN } from '~/shared/constants';
 import { CategoriesService } from './categories.service';
-import { CreateCategoryDto, UpdateCategoryDto } from './dtos';
-import { Category } from './entities';
+import { CreateCategoryDto, UpdateCategoryDto } from './dto';
 
+@ApiCookieAuth(ACCESS_TOKEN)
 @Controller('categories')
 @ApiTags('Categories')
+@UseGuards(AuthGuard)
 export class CategoriesController {
   constructor(private categoryService: CategoriesService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get category list' })
   async findAll(@Query() query: QueryDto): Promise<ApiResponseDto<Category[]>> {
-    const {
-      page = 1,
-      limit = 10,
-      _sort = 'id',
-      _order = 'asc',
-      ...params
-    } = query;
+    const { page = 1, limit = 10, sortBy = 'id', orderBy = 'asc', ...params } = query;
 
-    const options: CommonQueryOptions = {
+    const options: IQueryOptions = {
       skip: (Number(page) - 1) * Number(limit),
       limit: Number(limit),
-      sort: {
-        [_sort]: _order === 'desc' ? 'DESC' : 'ASC',
-      },
+      sort: sortBy,
+      order: orderBy === 'asc' ? 'ASC' : 'DESC',
       ...params,
     };
 
     try {
       const [categories, count] = await Promise.all([
         this.categoryService.findAll(options),
-        this.categoryService.count(),
+        this.categoryService.count(params),
       ]);
 
       return new ApiResponseDto(
@@ -90,9 +88,7 @@ export class CategoriesController {
 
   @Post()
   @ApiOperation({ summary: 'Create new category' })
-  async create(
-    @Body() createEmployeeDto: CreateCategoryDto,
-  ): Promise<ApiResponseDto<Category>> {
+  async create(@Body() createEmployeeDto: CreateCategoryDto): Promise<ApiResponseDto<Category>> {
     try {
       const category = await this.categoryService.create(createEmployeeDto);
 
@@ -133,11 +129,11 @@ export class CategoriesController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete category by id' })
-  async delete(@Param('id') id: number): Promise<ApiResponseDto<unknown>> {
+  async delete(@Param('id') id: number): Promise<ApiResponseDto<null>> {
     try {
-      const category = await this.categoryService.remove(id);
+      await this.categoryService.remove(id);
 
-      return new ApiResponseDto(false, HttpStatus.OK, 'Successful', category);
+      return new ApiResponseDto(false, HttpStatus.OK, 'Successful', null);
     } catch (error) {
       throw new HttpException(
         {

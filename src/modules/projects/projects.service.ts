@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { CreateProjectDto, UpdateProjectDto } from './dtos';
-import { Project } from './entities';
-import { CommonQueryOptions } from '~/common/dto';
+import { IQueryOptions } from '~/common/dto';
+import { Project, User } from '~/entities';
+import { CreateProjectDto, UpdateProjectDto } from './dto';
 
 @Injectable()
 export class ProjectsService {
@@ -17,38 +17,65 @@ export class ProjectsService {
     return await this.projectRepository.findOne({ where: { id } });
   }
 
-  async findOneOptions({
-    field,
-    payload,
-  }: {
-    field: string;
-    payload: any;
-  }): Promise<Project> {
+  async findOneOptions<T>({ field, payload }: { field: string; payload: T }): Promise<Project> {
     const query = {
       [field]: payload,
     };
     return await this.projectRepository.findOne(query);
   }
 
-  async findAll(options: CommonQueryOptions): Promise<Project[]> {
-    const { skip, limit, sort, ...params } = options;
+  async findAll(options: IQueryOptions): Promise<Project[]> {
+    const { skip, limit, sort, order, ...params } = options;
+    const queryBuilder = this.projectRepository.createQueryBuilder('project');
 
-    return await this.projectRepository.find({
-      where: params,
-      skip: skip,
-      take: limit,
-      order: sort,
-    });
+    queryBuilder
+      .leftJoinAndSelect('project.category', 'category')
+      .leftJoinAndSelect('project.members', 'user')
+      .select([
+        'project.id',
+        'project.name',
+        'project.url',
+        'project.description',
+        'category.id',
+        'category.name',
+        'user.id',
+        'user.username',
+        'user.email',
+        'user.avatar',
+        'user.role',
+      ]);
+
+    queryBuilder.where(params).skip(skip).take(limit).addOrderBy(`project.${sort}`, order);
+
+    return await queryBuilder.getMany();
   }
 
   async create(createDataDto: CreateProjectDto): Promise<Project> {
     const newProject = this.projectRepository.create(createDataDto);
+    const memberIds = createDataDto.memberIds;
+
+    if (memberIds) {
+      newProject.members = memberIds.map((id) => ({ ...new User(), id }));
+    }
+
     return this.projectRepository.save(newProject);
   }
 
   async update(id: number, updateDataDto: UpdateProjectDto): Promise<Project> {
-    await this.projectRepository.update(id, updateDataDto);
-    return this.projectRepository.findOne({ where: { id } });
+    const project = await this.projectRepository.findOne({ where: { id } });
+    const memberIds = updateDataDto.memberIds;
+
+    if (!project) {
+      throw new Error(`Project with ID ${id} not found`);
+    }
+
+    Object.assign(project, updateDataDto);
+
+    if (memberIds) {
+      project.members = memberIds.map((id) => ({ ...new User(), id }));
+    }
+
+    return this.projectRepository.save(project);
   }
 
   async remove(id: number): Promise<any> {

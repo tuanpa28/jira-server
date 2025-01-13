@@ -29,7 +29,7 @@ export class QueryDto {
   })
   @IsOptional()
   @IsString()
-  _sort?: string;
+  sortBy?: string;
 
   @ApiProperty({
     description: 'Sort order',
@@ -39,12 +39,12 @@ export class QueryDto {
   @IsOptional()
   @IsString()
   @IsIn(['asc', 'desc'])
-  _order?: 'asc' | 'desc';
+  orderBy?: 'asc' | 'desc';
 }
 
-export interface CommonQueryOptions {
+export interface IQueryOptions {
   skip?: number;
   limit?: number;
-  sort?: Record<string, 'ASC' | 'DESC'>;
-  [key: string]: any;
+  sort?: string;
+  order?: 'ASC' | 'DESC';
 }

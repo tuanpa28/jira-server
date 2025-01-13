@@ -8,7 +8,7 @@ export class ApiResponseDto<T> {
     data: T,
     currentPage?: number,
     totalPage?: number,
-    totalDocs?: number,
+    totalCount?: number,
   ) {
     this.isError = isError;
     this.statusCode = statusCode;
@@ -16,7 +16,7 @@ export class ApiResponseDto<T> {
     this.data = data;
     this.currentPage = currentPage;
     this.totalPage = totalPage;
-    this.totalDocs = totalDocs;
+    this.totalCount = totalCount;
   }
 
   @ApiProperty({ description: 'Error status', example: false })
@@ -50,5 +50,5 @@ export class ApiResponseDto<T> {
     description: 'Total records',
     example: 100,
   })
-  totalDocs?: number;
+  totalCount?: number;
 }

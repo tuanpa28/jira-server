@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { CreateCommentDto, UpdateCommentDto } from './dtos';
-import { Comment } from './entities';
-import { CommonQueryOptions } from '~/common/dto';
+import { IQueryOptions } from '~/common/dto';
+import { Comment } from '~/entities';
+import { CreateCommentDto, UpdateCommentDto } from './dto';
 
 @Injectable()
 export class CommentsService {
@@ -17,28 +17,41 @@ export class CommentsService {
     return await this.commentRepository.findOne({ where: { id } });
   }
 
-  async findOneOptions({
-    field,
-    payload,
-  }: {
-    field: string;
-    payload: any;
-  }): Promise<Comment> {
+  async findOneOptions<T>({ field, payload }: { field: string; payload: T }): Promise<Comment> {
     const query = {
       [field]: payload,
     };
     return await this.commentRepository.findOne(query);
   }
 
-  async findAll(options: CommonQueryOptions): Promise<Comment[]> {
-    const { skip, limit, sort, ...params } = options;
+  async findAll(options: IQueryOptions): Promise<Comment[]> {
+    const { skip, limit, sort, order, ...params } = options;
 
-    return await this.commentRepository.find({
-      where: params,
-      skip: skip,
-      take: limit,
-      order: sort,
-    });
+    const queryBuilder = this.commentRepository.createQueryBuilder('comment');
+
+    queryBuilder
+      .leftJoinAndSelect('comment.user', 'user')
+      .leftJoinAndSelect('comment.task', 'task')
+      .select([
+        'comment.id',
+        'comment.content',
+        'user.id',
+        'user.username',
+        'user.email',
+        'task.avatar',
+        'task.title',
+        'task.description',
+        'task.status',
+        'task.originalEstimate',
+        'task.timeTracking',
+        'task.timeRemaining',
+        'task.type',
+        'task.priority',
+      ]);
+
+    queryBuilder.where(params).skip(skip).take(limit).addOrderBy(`comment.${sort}`, order);
+
+    return await queryBuilder.getMany();
   }
 
   async create(createDataDto: CreateCommentDto): Promise<Comment> {

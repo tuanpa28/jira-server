@@ -1,14 +1,10 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 
-import { UserService } from '~/modules/users/users.service';
-import { LogInDto, RegisterDto } from './dtos';
+import { UserService } from '~/modules/users';
+import { UserGoogleDto } from '~/modules/users/dto';
+import { LogInDto, RegisterDto } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -21,9 +17,9 @@ export class AuthService {
     try {
       const { emailOrUsername, password } = logInDataDto;
 
-      const user = await this.userService.findOneOptions({
+      const user = await this.userService.findOneOptions<{ [key: string]: string }[]>({
         field: 'where',
-        payload: [{ username: emailOrUsername }, { email: emailOrUsername }],
+        payload: [{ email: emailOrUsername }, { username: emailOrUsername }],
       });
 
       if (!user) {
@@ -41,19 +37,17 @@ export class AuthService {
         username: user.username,
         email: user.email,
         password: user.password,
+        role: user.role,
       };
 
       const accessToken = await this.jwtService.signAsync(payload, {
         expiresIn: '10m',
-        secret: process.env.SECRET_KEY_JWT,
       });
 
-      const refreshToken = await this.jwtService.signAsync(
-        { id: user.id },
-        { expiresIn: '7d', secret: process.env.SECRET_KEY_JWT },
-      );
+      const refreshToken = await this.jwtService.signAsync({ id: user.id }, { expiresIn: '7d' });
 
       return {
+        user,
         accessToken,
         refreshToken,
       };
@@ -73,22 +67,13 @@ export class AuthService {
     try {
       const { username, email, password } = registerDataDto;
 
-      const existingUser = await this.userService.findOneOptions({
-        field: 'username',
-        payload: username,
+      const existingUser = await this.userService.findOneOptions<{ [key: string]: string }[]>({
+        field: 'where',
+        payload: [{ username }, { email }],
       });
 
       if (existingUser) {
-        throw new UnauthorizedException('Username already exists!');
-      }
-
-      const existingEmail = await this.userService.findOneOptions({
-        field: 'email',
-        payload: email,
-      });
-
-      if (existingEmail) {
-        throw new UnauthorizedException('Email address already exists!');
+        throw new UnauthorizedException('Username or Email already exists!');
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -114,9 +99,7 @@ export class AuthService {
 
   async refreshToken(token: string) {
     try {
-      const user = await this.jwtService.verifyAsync(token, {
-        secret: process.env.SECRET_KEY_JWT,
-      });
+      const user = await this.jwtService.verifyAsync(token);
 
       const currentUser = await this.userService.findOne(user.id);
 
@@ -129,17 +112,46 @@ export class AuthService {
         username: user.username,
         email: user.email,
         password: user.password,
+        role: user.role,
       };
 
       const accessToken = await this.jwtService.signAsync(payload, {
         expiresIn: '10m',
-        secret: process.env.SECRET_KEY_JWT,
       });
 
-      const refreshToken = await this.jwtService.signAsync(
-        { id: user.id },
-        { expiresIn: '7d', secret: process.env.SECRET_KEY_JWT },
+      const refreshToken = await this.jwtService.signAsync({ id: user.id }, { expiresIn: '7d' });
+
+      return {
+        accessToken,
+        refreshToken,
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          isError: true,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+
+  async googleAuthRedirect(user: UserGoogleDto) {
+    try {
+      const payload = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: user.role,
+      };
+
+      const accessToken = await this.jwtService.signAsync(payload, {
+        expiresIn: '10m',
+      });
+
+      const refreshToken = await this.jwtService.signAsync({ id: user.id }, { expiresIn: '7d' });
 
       return {
         accessToken,
